@@ -24,6 +24,8 @@ region="${INPUT_REGION:-${FLY_REGION:-iad}}"
 org="${INPUT_ORG:-${FLY_ORG:-personal}}"
 image="$INPUT_IMAGE"
 config="${INPUT_CONFIG:-fly.toml}"
+build_args=""
+build_secrets=""
 
 if ! echo "$app" | grep "$PR_NUMBER"; then
   echo "For safety, this action requires the app's name to contain the PR number."
@@ -36,11 +38,23 @@ if [ "$EVENT_TYPE" = "closed" ]; then
   exit 0
 fi
 
+if [ -n "$INPUT_BUILD_ARGS" ]; then
+  for ARG in $(echo "$INPUT_BUILD_ARGS" | tr " " "\n"); do
+    build_args="$build_args --build-arg ${ARG}"
+  done
+fi
+
+if [ -n "$INPUT_BUILD_SECRETS" ]; then
+  for ARG in $(echo "$INPUT_BUILD_SECRETS" | tr " " "\n"); do
+    build_secrets="$build_secrets --build-secret ${ARG}"
+  done
+fi
+
 # Deploy the Fly app, creating it first if needed.
 if ! flyctl status --app "$app"; then
   # Backup the original config file since 'flyctl launch' messes up the [build.args] section
   cp "$config" "$config.bak"
-  flyctl launch --no-deploy --copy-config --name "$app" --image "$image" --region "$region" --org "$org" $INPUT_LAUNCH_OPTIONS
+  flyctl launch --no-deploy --copy-config --name "$app" --image "$image" --region "$region" --org "$org" $INPUT_LAUNCH_OPTIONS ${build_args} ${build_secrets}
   # Restore the original config file
   cp "$config.bak" "$config"
 fi
@@ -56,9 +70,9 @@ fi
 # Trigger the deploy of the new version.
 echo "Contents of config $config file: " && cat "$config"
 if [ -n "$INPUT_VM" ]; then
-  flyctl deploy --config "$config" --app "$app" --regions "$region" --image "$image" --strategy immediate --ha=$INPUT_HA --vm-size "$INPUT_VMSIZE"
+  flyctl deploy --config "$config" --app "$app" --regions "$region" --image "$image" --strategy immediate --ha=$INPUT_HA --vm-size "$INPUT_VMSIZE" ${build_args} ${build_secrets}
 else
-  flyctl deploy --config "$config" --app "$app" --regions "$region" --image "$image" --strategy immediate --ha=$INPUT_HA --vm-cpu-kind "$INPUT_CPUKIND" --vm-cpus $INPUT_CPU --vm-memory "$INPUT_MEMORY"
+  flyctl deploy --config "$config" --app "$app" --regions "$region" --image "$image" --strategy immediate --ha=$INPUT_HA --vm-cpu-kind "$INPUT_CPUKIND" --vm-cpus $INPUT_CPU --vm-memory "$INPUT_MEMORY" ${build_args} ${build_secrets}
 fi
 
 # Make some info available to the GitHub workflow.
