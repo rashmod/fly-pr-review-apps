@@ -41,6 +41,6 @@ inputs:
   launch_options:
     description: Additional options to pass to the Fly launch command at creation
   build_args:
-    description: Additional build arguments to pass to the Fly build command at creation
+    description: Additional space separated build arguments to pass to the Fly build command at creation
   build_secrets:
-    description: Additional build secrets to pass to the Fly build command at creation
+    description: Additional space separated build secrets to pass to the Fly build command at creation
