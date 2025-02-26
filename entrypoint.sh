@@ -64,7 +64,28 @@ fi
 
 # Attach postgres cluster to the app if specified.
 if [ -n "$INPUT_POSTGRES" ]; then
-  flyctl postgres attach "$INPUT_POSTGRES" --app "$app" || true
+    if [ "$INPUT_POSTGRES" = "new" ]; then
+        # Create a new Postgres cluster and attach it to the app.
+        db_name="${app}-db"
+
+        # Create the new Postgres cluster if it doesn't already exist.
+        if flyctl postgres list --org "$org" | grep -q "$db_name"; then
+            echo "Postgres cluster $db_name already exists."
+        else
+            echo "Creating new Postgres cluster: $db_name"
+            flyctl postgres create --name "$db_name" --region "$region" --org "$org"
+        fi
+
+        # Attach the new Postgres cluster to the app.
+        echo "Attaching to new Postgres cluster: $db_name"
+        flyctl postgres attach "$db_name" --app "$app" || true
+    else
+        # If the Postgres cluster already exists, attach it to the app.
+        echo "Attaching to existing Postgres cluster: $INPUT_POSTGRES"
+        flyctl postgres attach "$INPUT_POSTGRES" --app "$app" || true
+    fi
+else
+    echo "No Postgres cluster specified."
 fi
 
 # Trigger the deploy of the new version.
