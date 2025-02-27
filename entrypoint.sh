@@ -39,6 +39,16 @@ fi
 # PR was closed - remove the Fly app if one exists and exit.
 if [ "$EVENT_TYPE" = "closed" ]; then
   flyctl apps destroy "$app" -y || true
+
+  # Delete the database only if a new one was created
+  if [ "$INPUT_POSTGRES" = "new" ]; then
+    db_name="${app}-db"
+    echo "Deleting Postgres cluster $db_name"
+    flyctl apps destroy "$db_name" -y|| true
+  else
+    echo "Skipping Postgres deletion since an existing database was used."
+  fi
+
   exit 0
 fi
 
