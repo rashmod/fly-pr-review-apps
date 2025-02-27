@@ -27,6 +27,10 @@ config="${INPUT_CONFIG:-fly.toml}"
 build_args=""
 build_secrets=""
 
+postgres_vm_cpus=1
+postgres_volume_size=1
+postgres_initial_cluster_size=1
+
 if ! echo "$app" | grep "$PR_NUMBER"; then
   echo "For safety, this action requires the app's name to contain the PR number."
   exit 1
@@ -73,7 +77,7 @@ if [ -n "$INPUT_POSTGRES" ]; then
             echo "Postgres cluster $db_name already exists."
         else
             echo "Creating new Postgres cluster: $db_name"
-            flyctl postgres create --name "$db_name" --region "$region" --org "$org"
+            flyctl postgres create --name "$db_name" --region "$region" --org "$org" --vm-cpus $postgres_vm_cpus --initial-cluster-size $postgres_initial_cluster_size --volume-size $postgres_volume_size
         fi
 
         # Attach the new Postgres cluster to the app.
