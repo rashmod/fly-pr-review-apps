@@ -83,7 +83,7 @@ if [ -n "$INPUT_POSTGRES" ]; then
         db_name="${app}-db"
 
         # Create the new Postgres cluster if it doesn't already exist.
-        if flyctl postgres list --org "$org" | grep -q "$db_name"; then
+        if flyctl apps list --org "$org" | grep -q "$db_name"; then
             echo "Postgres cluster $db_name already exists."
         else
             echo "Creating new Postgres cluster: $db_name"
