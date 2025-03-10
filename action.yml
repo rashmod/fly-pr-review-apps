@@ -40,6 +40,8 @@ inputs:
     default: false
   launch_options:
     description: Additional options to pass to the Fly launch command at creation
+  deploy_options:
+    description: Additional options to pass to the Fly deploy command
   build_args:
     description: Additional space separated build arguments to pass to the Fly build command at creation
   build_secrets:
